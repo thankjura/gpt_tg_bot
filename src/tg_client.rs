@@ -15,6 +15,27 @@ struct UpdateResponse {
     result: Option<Vec<tg::Update>>
 }
 
+pub fn escape(s: &str) -> String {
+    s.replace('_', r"\_")
+        .replace('*', r"\*")
+        .replace('[', r"\[")
+        .replace(']', r"\]")
+        .replace('(', r"\(")
+        .replace(')', r"\)")
+        .replace('~', r"\~")
+        //.replace('`', r"\`")
+        .replace('>', r"\>")
+        .replace('#', r"\#")
+        .replace('+', r"\+")
+        .replace('-', r"\-")
+        .replace('=', r"\=")
+        .replace('|', r"\|")
+        .replace('{', r"\{")
+        .replace('}', r"\}")
+        .replace('.', r"\.")
+        .replace('!', r"\!")
+}
+
 impl TGClient {
     pub fn new(token: String) -> Self {
         Self {
@@ -42,11 +63,13 @@ impl TGClient {
 
     pub async fn send_message(&self, chat_id: u64, message: &str, username: &str) {
         let client = reqwest::Client::new();
+        let message = escape(message);
         let resp = client.post(format!("{}{}/sendMessage", TG_BASE_URL, &self.token))
             .json(&json!(
                 {
                     "chat_id": chat_id,
                     "text": message,
+                    "parse_mode": "MarkdownV2"
                 }
             ))
             .send()
