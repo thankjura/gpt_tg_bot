@@ -61,10 +61,10 @@ impl TGClient {
     }
 
 
-    pub async fn send_message(&self, chat_id: u64, message: &str, username: &str) {
+    pub async fn send_message(&self, chat_id: u64, message: &str) {
         let client = reqwest::Client::new();
         let message = escape(message);
-        let resp = client.post(format!("{}{}/sendMessage", TG_BASE_URL, &self.token))
+        client.post(format!("{}{}/sendMessage", TG_BASE_URL, &self.token))
             .json(&json!(
                 {
                     "chat_id": chat_id,
@@ -75,8 +75,4 @@ impl TGClient {
             .send()
             .await.unwrap();
     }
-
-    // fn message(message: &str) -> String {
-    //     let mut res = reqwest::blocking::get("http://httpbin.org/get")?;
-    // }
 }

@@ -4,10 +4,8 @@ pub mod structs;
 mod gpt_client;
 
 use std::time::Duration;
-use clap::Parser;
 use tokio::time::sleep;
 use crate::gpt_client::GPTClient;
-use crate::structs::gpt;
 use crate::tg_client::TGClient;
 
 #[tokio::main]
@@ -25,7 +23,7 @@ async fn main() {
     let mut first_run = true;
 
     loop {
-        let mut updates = tg_client.updates().await;
+        let updates = tg_client.updates().await;
         if !first_run {
             for update in &updates {
                 if let Some(message) = &update.message {
@@ -34,25 +32,11 @@ async fn main() {
                         continue;
                     }
 
-                    let username;
-
-                    if let Some(user) = &message.from {
-                        if user.is_bot {
-                            continue;
-                        }
-
-                        if let Some(name) = &user.username {
-                            if !allowed_users.contains(name) {
-                                continue;
-                            } else {
-                                username = name;
-                            }
-                        } else {
-                            continue;
-                        }
-                    } else {
+                    let username= &message.from.as_ref().and_then(|u| u.username.as_ref());
+                    if username.is_none() || !allowed_users.contains(&username.unwrap()) {
                         continue;
                     }
+                    let username = username.unwrap();
 
                     println!("Receive message from {}: {}, wait GTP response...", username, text);
 
@@ -60,7 +44,7 @@ async fn main() {
                         for choice in completion.choices {
                             let send_message = choice.message.content;
                             println!("Sending message: {}", send_message);
-                            tg_client.send_message(message.chat.id, &send_message, username).await;
+                            tg_client.send_message(message.chat.id, &send_message).await;
                         }
                     }
                 }
